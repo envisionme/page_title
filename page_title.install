@@ -82,6 +82,7 @@ function page_title_uninstall() {
   variable_del('page_title_user');
   variable_del('page_title_user_showfield');
   variable_del('page_title_pager_pattern');
+  variable_del('page_title_forum_root_title');
 
   // Clear the node specific variables
   $types = node_get_types('names');
@@ -91,9 +92,11 @@ function page_title_uninstall() {
   }
 
   // Clear the vocab specific variables
-  $vocabs = taxonomy_get_vocabularies();
-  foreach ($vocabs as $vid => $vocab) {
-    variable_del("page_title_vocab_{$vid}");
-    variable_del("page_title_vocab_{$vid}_showfield");
+  if (module_exists('taxonomy')) {
+    $vocabs = taxonomy_get_vocabularies();
+    foreach ($vocabs as $vid => $vocab) {
+      variable_del("page_title_vocab_{$vid}");
+      variable_del("page_title_vocab_{$vid}_showfield");
+    }
   }
 }
