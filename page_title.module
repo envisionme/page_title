@@ -236,17 +236,17 @@ function page_title_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   switch ($op) {
     case 'update':
       if (user_access('set page title')) {
-        db_query('DELETE FROM {page_title} WHERE type = "node" AND id = %d', $node->nid);
+        db_query("DELETE FROM {page_title} WHERE type = 'node' AND id = %d", $node->nid);
       }
       // fallthrough to insert intentional!
     case 'insert':
       if (isset($node->page_title) && drupal_strlen(trim($node->page_title)) > 0 && user_access('set page title')) {
-        db_query('INSERT INTO {page_title} VALUES ("node", %d, "%s")', $node->nid, $node->page_title);
+        db_query("INSERT INTO {page_title} VALUES ('node', %d, '%s')", $node->nid, $node->page_title);
       }
       break;
 
     case 'delete':
-      db_query('DELETE FROM {page_title} WHERE type = "node" AND id = %d', $node->nid);
+      db_query("DELETE FROM {page_title} WHERE type = 'node' AND id = %d", $node->nid);
       break;
 
     case 'load':
@@ -264,17 +264,17 @@ function page_title_taxonomy($op, $type, $edit) {
   switch ($op) {
     case 'update':
       if (user_access('set page title')) {
-        db_query('DELETE FROM {page_title} WHERE type = "term" AND id = %d', $edit['tid']);
+        db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
       }
       // Fallthrough to insert is intentional!
     case 'insert':
       if (isset($edit['page_title']) && drupal_strlen(trim($edit['page_title'])) > 0 && user_access('set page title')) {
-        db_query('INSERT INTO {page_title} VALUES("term", %d, "%s")', $edit['tid'], $edit['page_title']);
+        db_query("INSERT INTO {page_title} VALUES('term', %d, '%s')", $edit['tid'], $edit['page_title']);
       }
       break;
 
     case 'delete':
-      db_query('DELETE FROM {page_title} WHERE type = "term" AND id = %d', $edit['tid']);
+      db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
       break;
   }
 }
@@ -287,17 +287,17 @@ function page_title_user($op, &$edit, &$account) {
   switch ($op) {
     case 'update':
       if (user_access('set page title')) {
-        db_query('DELETE FROM {page_title} WHERE type = "user" AND id = %d', $account->uid);
+        db_query("DELETE FROM {page_title} WHERE type = 'user' AND id = %d", $account->uid);
       }
       // Fallthrough to insert is intentional!
     case 'insert':
       if (isset($edit['page_title']) && drupal_strlen(trim($edit['page_title'])) > 0 && user_access('set page title')) {
-        db_query('INSERT INTO {page_title} VALUES("user", %d, "%s")', $account->uid, $edit['page_title']);
+        db_query("INSERT INTO {page_title} VALUES('user', %d, '%s')", $account->uid, $edit['page_title']);
       }
       break;
 
     case 'delete':
-      db_query('DELETE FROM {page_title} WHERE type = "user" AND id = %d', $account->uid);
+      db_query("DELETE FROM {page_title} WHERE type = 'user' AND id = %d", $account->uid);
       break;
   }
 }
@@ -372,7 +372,7 @@ function page_title_get_title() {
  *   string the page title for the given type & id.
  */
 function page_title_load_title($id, $type) {
-  return db_result(db_query('SELECT page_title FROM {page_title} WHERE type = "%s" AND id = %d', $type, $id));
+  return db_result(db_query("SELECT page_title FROM {page_title} WHERE type = '%s' AND id = %d", $type, $id));
 }
 
 
