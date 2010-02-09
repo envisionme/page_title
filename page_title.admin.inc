@@ -57,6 +57,14 @@ function page_title_admin_settings() {
     ) + $pattern_form_element,
   );
 
+  if (module_exists('forum')) {
+    $form['patterns']['pattern']['page_title_forum_root_title'] = array(
+      '#title' => t('Forum Root'),
+      '#default_value' => variable_get('page_title_forum_root_title', ''),
+    ) + $pattern_form_element;
+    $form['patterns']['scope']['page_title_forum_root_title'] = array('#type' => 'markup', '#value' => t('Global Only'));
+  }
+
 
   // Define the "showfield" checkbox for the user profile page
   $form['patterns']['showfield']['page_title_user_showfield'] = array(

@@ -134,7 +134,7 @@ function page_title_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'textfield',
         '#title' => t('Page title'),
         '#description' => t('Provide a description of this node to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => $form['#node']->page_title,
+        '#default_value' => isset($form['#node']->page_title) ? $form['#node']->page_title : '',
         '#size' => 60,
         '#maxlength' => 255,
         '#weight' => -4,
@@ -164,7 +164,7 @@ function page_title_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'textfield',
         '#title' => t('Page title'),
         '#description' => t('Provide a description of this forum to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => page_title_load_title($form['tid']['#value'], 'term'),
+        '#default_value' => isset($form['tid']['#value']) ? page_title_load_title($form['tid']['#value'], 'term') : '',
         '#size' => 60,
         '#maxlength' => 255,
         '#weight' => -20,
@@ -212,17 +212,6 @@ function page_title_form_alter(&$form, $form_state, $form_id) {
     );
 
     $form['#submit'][] = 'page_title_node_type_form_submit';
-  }
-  elseif ($form_id == 'forum_admin_settings') {
-    $form['page_title_forum_root_title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Page title'),
-      '#description' => t('Provide a description for this forum overview page to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-      '#default_value' => variable_get('page_title_forum_root_title', ''),
-      '#size' => 60,
-      '#maxlength' => 255,
-      '#weight' => -1,
-    );
   }
 }
 
@@ -351,10 +340,6 @@ function page_title_get_title() {
         $title = $term_title;
       }
     }
-    // If not then it's the forum root.
-    else {
-      $title = variable_get('page_title_forum_root_title', '');
-    }
   }
 
   // If nothing above set a title, give the legacy function a chance to act
@@ -471,11 +456,16 @@ function page_title_page_get_title() {
       }
       // Forum
       elseif (arg(0) == 'forum' && module_exists('forum')) {
+        // If there is a numeric argument, then we're viewing a container or forum
         if (is_numeric(arg(1))) {
           $types['taxonomy'] = taxonomy_get_term(arg(1));
+          $forum_vid = variable_get('forum_nav_vocabulary', '');
+          $page_title_pattern = variable_get('page_title_vocab_'. $forum_vid, '');
         }
-        $forum_vid = variable_get('forum_nav_vocabulary', '');
-        $page_title_pattern = variable_get('page_title_vocab_'. $forum_vid, '');
+        // Otherwise its the root - lets grab the root pattern.
+        else {
+          $page_title_pattern = variable_get('page_title_forum_root_title', '');
+        }
       }
       // User
       elseif (arg(0) == 'user' && is_numeric(arg(1))) {
