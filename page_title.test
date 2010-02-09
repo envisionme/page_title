@@ -1,5 +1,11 @@
 <?php
 // $Id$
+
+/**
+ * @file
+ * Test cases for the Page Title module.
+ */
+
 class PageTitleTestCase extends DrupalWebTestCase {
   public static function getInfo() {
     return array(

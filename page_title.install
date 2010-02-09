@@ -40,6 +40,14 @@ function page_title_update_6200() {
   if (db_column_exists('page_title', 'id')) {
     return $ret;
   }
+  elseif (db_table_exists('page_title_temp') || db_table_exists('page_title_old')) {
+    drupal_set_message(t('Page Title cannot be updated until page_title_temp and/or page_title_old have been removed. Please manually remove these tables (if safe to do so), return to <a href="@update-php">update.php</a> and run the remaining updates.', array('@update-php' => base_path() .'update.php?op=selection')), 'warning', FALSE);
+
+    return array('#abort' => array(
+      'success' => FALSE,
+      'query' => t('It seems page_title_temp or page_title_old tables are already present in your database, possibly from a previous update. Please remove these tables from your database.')
+    ));
+  }
 
   db_create_table($ret, 'page_title_temp', array(
     'fields' => array(

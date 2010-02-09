@@ -38,6 +38,25 @@ function page_title_help($path, $arg) {
 
 
 /**
+ * Implementation of hook_requirements().
+ */
+function page_title_requirements($phase) {
+  $requirements = array();
+  if ($phase == 'runtime') {
+    if (db_table_exists('page_title_old')) {
+      $requirements['upgrade_table'] = array(
+        'title' => t('Page Title upgrade table present'),
+        'value' => '',
+        'description' => t('The Page Title upgrade table (<code>page_title_old</code>) is present. This should be manually removed once the administrator can confirm the upgrade was successfull.'),
+        'severity' => REQUIREMENT_WARNING,
+      );
+    }
+  }
+
+  return $requirements;
+}
+
+/**
  * Implementation of hook_perm().
  */
 function page_title_perm() {
@@ -387,7 +406,7 @@ function page_title_node_get_title($nid) {
 
 /**
  * Legacy page title setting function...
- * NOTE: This has been depreicated in favour of hook_page_title_alter().
+ * NOTE: This has been deprecated in favour of hook_page_title_alter().
  */
 function page_title_set_title($title = NULL) {
   static $stored_title;
