@@ -149,89 +149,160 @@ function page_title_form_alter(&$form, $form_state, $form_id) {
   if ($form['#id'] == 'node-form') {
     $key = 'page_title_type_'. $form['type']['#value'] .'_showfield';
     if (variable_get($key, 0)) {
-      $form['page_title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Page title'),
-        '#description' => t('Provide a description of this node to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => isset($form['#node']->page_title) ? $form['#node']->page_title : '',
-        '#size' => 60,
-        '#maxlength' => 255,
-        '#weight' => -4,
-      );
+      $page_title = isset($form['#node']->page_title) ? $form['#node']->page_title : NULL;
+
+      // If we have vertical tabs installed, we need to render the form element slightly differently
+      $show_vertical_tabs = FALSE;
+      if (module_exists('vertical_tabs')) {
+        if (arg(0) == 'admin') {
+          // If its an admin page, we must render it as a fieldset - the vertical tabs allows per-fieldset disabling. We have to render a fieldset to allow the option to disable it.
+          $show_vertical_tabs = TRUE;
+        }
+        else {
+          // This isn't an admin page, we should decide whether to render the page title fieldset depending on if the setting is set.
+          $show_vertical_tabs = ($vt_conf = vertical_tabs_get_config($form_id)) && ($vt_conf['page_title'] !== 0);
+        }
+      }
+
+      // If we have decided to show vertical tabs, render the page_title element into a fieldset, otherwise just a textfield with a weight putting it at the top.
+      if ($show_vertical_tabs) {
+        $form['page_title'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Page Title settings'),
+          '#collapsible' => TRUE,
+          '#collapsed' => empty($page_title),
+          '#group' => 'additional_settings',
+          '#weight' => 35,
+          '#attached' => array(
+            'js' => array(
+              'vertical-tabs' => drupal_get_path('module', 'page_title') . '/page_title.js',
+            ),
+          ),
+        );
+        $form['page_title']['page_title'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Page title'),
+          '#description' => t('Provide a description of this node to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
+          '#default_value' => $page_title,
+          '#size' => 60,
+          '#maxlength' => 255,
+        );
+      }
+      else {
+        $form['page_title'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Page title'),
+          '#description' => t('Provide a description of this node to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
+          '#default_value' => $page_title,
+          '#size' => 60,
+          '#maxlength' => 255,
+          '#weight' => -4,
+        );
+      }
     }
   }
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function page_title_form_taxonomy_form_term_alter(&$form, &$form_state) {
   // Check we're editing a taxonomy term and also check that the terms vocabulary's 'show field' is enabled
-  elseif ($form_id == 'taxonomy_form_term') {
-    $key = 'page_title_vocab_'. $form['vid']['#value'] .'_showfield';
-    if (variable_get($key, 0)) {
-      $form['advanced']['page_title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Page title'),
-        '#description' => t('Provide a description of this term to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => page_title_load_title($form['tid']['#value'], 'term'),
-        '#size' => 60,
-        '#maxlength' => 255,
-        '#weight' => -20,
-      );
-    }
-  }
-  // Check we're editing a forum container or forum "forum" and also check that the terms vocabulary's 'show field' is enabled
-  elseif ($form_id == 'forum_form_forum' || $form_id == 'forum_form_container') {
-    $key = 'page_title_vocab_'. $form['vid']['#value'] .'_showfield';
-    if (variable_get($key, 0)) {
-      $form['page_title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Page title'),
-        '#description' => t('Provide a description of this forum to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => isset($form['tid']['#value']) ? page_title_load_title($form['tid']['#value'], 'term') : '',
-        '#size' => 60,
-        '#maxlength' => 255,
-        '#weight' => -20,
-      );
-    }
-  }
-   // Check we're editing a user profile and also check that the user settings's have 'show field' enabled
-  elseif ($form_id == 'user_profile_form') {
-    if (variable_get('page_title_user_showfield', 0)) {
-      $form['account']['page_title'] = array(
-        '#type' => 'textfield',
-        '#title' => t('Page title'),
-        '#description' => t('Provide a description of this user to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-        '#default_value' => page_title_load_title($form['_account']['#value']->uid, 'user'),
-        '#size' => 60,
-        '#maxlength' => 255,
-        '#weight' => 20,
-      );
-    }
-  }
-  elseif ($form_id == 'node_type_form') {
-    $form['page_title'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Page Title Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#tree' => TRUE,
-    );
-
-    $form['page_title']['show_field'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Page Title Field'),
-      '#description' => t('If checked, the <em>Page Title</em> field will appear on the node edit form for those who have permission to set the title.'),
-      '#options' => array(
-        'show_field' => t('Show field'),
-      ),
-      '#default_value' => variable_get('page_title_type_'. $form['#node_type']->type .'_showfield', 0) ? array('show_field') : array(),
-    );
-
-    $form['page_title']['pattern'] = array(
+  $key = 'page_title_vocab_'. $form['vid']['#value'] .'_showfield';
+  if (variable_get($key, 0)) {
+    $form['advanced']['page_title'] = array(
       '#type' => 'textfield',
-      '#title' => t('Page Title Pattern'),
-      '#default_value' => variable_get('page_title_type_'. $form['#node_type']->type, ''),
-      '#description' => t('Enter the <em>Page Title</em> pattern you want to use for this node type. For more information, please use the !link settings page', array('!link' => l('Page Title', 'admin/content/page_title'))),
+      '#title' => t('Page title'),
+      '#description' => t('Provide a description of this term to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
+      '#default_value' => page_title_load_title($form['tid']['#value'], 'term'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#weight' => -20,
     );
-
-    $form['#submit'][] = 'page_title_node_type_form_submit';
   }
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function page_title_form_forum_form_forum_alter(&$form, &$form_state) {
+  // Check we're editing a forum container or forum "forum" and also check that the terms vocabulary's 'show field' is enabled
+  $key = 'page_title_vocab_'. $form['vid']['#value'] .'_showfield';
+  if (variable_get($key, 0)) {
+    $form['page_title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Page title'),
+      '#description' => t('Provide a description of this forum to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
+      '#default_value' => isset($form['tid']['#value']) ? page_title_load_title($form['tid']['#value'], 'term') : '',
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#weight' => -20,
+    );
+  }
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function page_title_form_forum_form_container_alter(&$form, &$form_state) {
+  // Check we're editing a forum container or forum "forum" and also check that the terms vocabulary's 'show field' is enabled
+  page_title_form_forum_form_forum_alter($form, $form_state);
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function page_title_form_user_profile_form_alter(&$form, &$form_state) {
+  // Check we're editing a user profile and also check that the user settings's have 'show field' enabled
+  if (variable_get('page_title_user_showfield', 0)) {
+    $form['account']['page_title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Page title'),
+      '#description' => t('Provide a description of this user to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
+      '#default_value' => page_title_load_title($form['_account']['#value']->uid, 'user'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#weight' => 20,
+    );
+  }
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function page_title_form_node_type_form_alter(&$form, &$form_state) {
+  // Alter the node type form - allows easy access to the per-content type page title settings
+  $form['page_title'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Page Title Settings'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  $form['page_title']['show_field'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Page Title Field'),
+    '#description' => t('If checked, the <em>Page Title</em> field will appear on the node edit form for those who have permission to set the title.'),
+    '#options' => array(
+      'show_field' => t('Show field'),
+    ),
+    '#default_value' => variable_get('page_title_type_'. $form['#node_type']->type .'_showfield', 0) ? array('show_field') : array(),
+  );
+
+  $form['page_title']['pattern'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Page Title Pattern'),
+    '#default_value' => variable_get('page_title_type_'. $form['#node_type']->type, ''),
+    '#description' => t('Enter the <em>Page Title</em> pattern you want to use for this node type. For more information, please use the !link settings page', array('!link' => l('Page Title', 'admin/content/page_title'))),
+  );
+
+  $form['#submit'][] = 'page_title_node_type_form_submit';
 }
 
 
