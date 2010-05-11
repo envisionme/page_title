@@ -444,6 +444,17 @@ function page_title_get_title($raw = FALSE) {
         }
       }
     }
+    // We've not matched any "normal" situations above - so lets see what the menu system reports
+    else {
+      $menu = menu_get_item();
+      switch ($menu['page_callback']) {
+        // If the page callback is a views page, then we can lookup the static title for a page
+        case 'views_page' :
+          $key = "view-{$menu['page_arguments'][0]}-{$menu['page_arguments'][1]}";
+          $title = page_title_load_title(0, $key);
+          break;
+      }
+    }
 
     // If nothing above set a title, give the legacy function a chance to act
     if (empty($title)) {
@@ -702,4 +713,75 @@ function page_title_content_extra_fields($type_name) {
   }
 
   return $extra;
+}
+
+
+/**
+ * Implement hook_preprocess_views_ui_edit_tab().
+ *
+ * This is used to insert the Page Title settings details for a Page View (we're not interested in block views, for example)
+ */
+function page_title_preprocess_views_ui_edit_tab(&$vars) {
+  $type = get_class($vars['display']->handler);
+  if ($type != 'views_plugin_display_page') return;
+
+  // Get the display and view
+  $display_id = $vars['display']->id;
+  $view = $vars['view'];
+
+  // Lookup the current title and strip any tags out.
+  $title = strip_tags(page_title_load_title(0, "view-{$view->name}-{$display_id}"));
+  if (!$title) {
+    $title = t('None');
+  }
+
+  // Create the page title settings category
+  $id = 'page_title';
+  $vars['categories'][$id] = array(
+    'title' => t('Page Title Settings'),
+    'data' => array(
+      $id => array(
+        'content' => t('Page Title: !link', array('!link' => $vars['display']->handler->option_link($title, $id, '', t('Page Title')))),
+        'links' => '',
+        'overridden' => FALSE,
+        'defaulted' => FALSE,
+        'changed' => !empty($vars['view']->changed_sections[$display_id .'-'. $id]),
+        'class' => views_ui_item_css($display_id .'-'. $id),
+      ),
+    ),
+  );
+}
+
+
+/**
+ * Implementation of hook_form_views_uit_edit_display_form_alter() (From hook_form_FORM_ID_alter()).
+ *
+ * This allows us to inject our Page Title form.
+ */
+function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
+  if ($form_state['section'] == 'page_title') {
+    $display_id = $form_state['display_id'];
+    $view = $form_state['view'];
+
+    $form['page_title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Page Title'),
+      '#description' => t('The value entered in here will be used for the page title in <head>'),
+      '#weight' => -1,
+      '#default_value' => page_title_load_title(0, "view-{$view->name}-{$form_state['display_id']}"),
+    );
+    $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_display_form_submit';
+  }
+}
+
+
+/**
+ * Simple submit handler for the above form.
+ * @SEE: page_title_form_views_ui_edit_display_form_alter()
+ */
+function page_title_views_ui_display_form_submit($form, &$form_state) {
+  $view = $form_state['view'];
+  $key = "view-{$view->name}-{$form_state['display_id']}";
+  db_query("DELETE FROM {page_title} WHERE type = '%s' AND id = 0", $key);
+  db_query("INSERT INTO {page_title} VALUES('%s', 0, '%s')", $key, $form_state['values']['page_title']);
 }
