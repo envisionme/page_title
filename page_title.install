@@ -20,7 +20,7 @@ function page_title_install() {
 function page_title_schema() {
   $schema['page_title'] = array(
     'fields' => array(
-      'type'       => array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => 'node'),
+      'type'       => array('type' => 'varchar', 'length' => 15,  'not null' => TRUE, 'default' => 'node'),
       'id'         => array('type' => 'int', 'unsigned' => TRUE,  'not null' => TRUE, 'default' => 0),
       'page_title' => array('type' => 'varchar', 'length' => 255, 'not null' => TRUE, 'default' => '')
     ),
@@ -72,16 +72,6 @@ function page_title_update_6200() {
   }
   variable_del('page_title_display');
 
-  return $ret;
-}
-
-
-/**
- * Implementation of hook_update_n().
- */
-function page_title_update_6201() {
-  $ret = array();
-  db_change_field($ret, 'page_title', 'type', 'type', array('type' => 'varchar', 'length' => 128, 'not null' => TRUE, 'default' => 'node'));
   return $ret;
 }
 
