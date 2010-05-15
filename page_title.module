@@ -444,17 +444,6 @@ function page_title_get_title($raw = FALSE) {
         }
       }
     }
-    // We've not matched any "normal" situations above - so lets see what the menu system reports
-    else {
-      $menu = menu_get_item();
-      switch ($menu['page_callback']) {
-        // If the page callback is a views page, then we can lookup the static title for a page
-        case 'views_page' :
-          $key = "view-{$menu['page_arguments'][0]}-{$menu['page_arguments'][1]}";
-          $title = page_title_load_title(0, $key);
-          break;
-      }
-    }
 
     // If nothing above set a title, give the legacy function a chance to act
     if (empty($title)) {
@@ -619,6 +608,18 @@ function page_title_page_get_title($raw = FALSE) {
         $types['user'] = user_load(array('uid' => arg(1)));
         $page_title_pattern = variable_get('page_title_blog', '');
       }
+      // We've not matched any "normal" situations above - so lets see what the menu system reports
+      else {
+        $menu = menu_get_item();
+        switch ($menu['page_callback']) {
+          // If the page callback is a views page, then we can lookup the static title for a page
+          case 'views_page' :
+            $key = "view-{$menu['page_arguments'][0]}-{$menu['page_arguments'][1]}";
+            $page_title_pattern = variable_get($key, '');
+            break;
+        }
+      }
+
 
       // If pattern is emtpy (either if the type is not overridable or simply not set) fallback to the default pattern)
       if (empty($page_title_pattern)) {
@@ -715,6 +716,10 @@ function page_title_content_extra_fields($type_name) {
   return $extra;
 }
 
+function _page_title_build_views_keys($view_name, $display_id, $argument_id = NULL) {
+  return 'page_title-'. implode('-', array_filter(array($view_name, $display_id, $argument_id)));
+}
+
 
 /**
  * Implement hook_preprocess_views_ui_edit_tab().
@@ -730,7 +735,7 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
   $view = $vars['view'];
 
   // Lookup the current title and strip any tags out.
-  $title = strip_tags(page_title_load_title(0, "view-{$view->name}-{$display_id}"));
+  $title = strip_tags(variable_get(_page_title_build_views_keys($view->name, $display_id), ''));
   if (!$title) {
     $title = t('None');
   }
@@ -760,16 +765,17 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
  */
 function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
   if ($form_state['section'] == 'page_title') {
-    $display_id = $form_state['display_id'];
     $view = $form_state['view'];
+    $key = _page_title_build_views_keys($view->name, $form_state['display_id']);
 
     $form['page_title'] = array(
       '#type' => 'textfield',
       '#title' => t('Page Title'),
-      '#description' => t('The value entered in here will be used for the page title in <head>'),
+      '#description' => t('Optionally use this field to define a page title pattern. You may use Global Tokens.'),
       '#weight' => -1,
-      '#default_value' => page_title_load_title(0, "view-{$view->name}-{$form_state['display_id']}"),
+      '#default_value' => variable_get($key, ''),
     );
+
     $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_display_form_submit';
   }
 }
@@ -781,7 +787,41 @@ function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) 
  */
 function page_title_views_ui_display_form_submit($form, &$form_state) {
   $view = $form_state['view'];
-  $key = "view-{$view->name}-{$form_state['display_id']}";
-  db_query("DELETE FROM {page_title} WHERE type = '%s' AND id = 0", $key);
-  db_query("INSERT INTO {page_title} VALUES('%s', 0, '%s')", $key, $form_state['values']['page_title']);
+  $key = _page_title_build_views_keys($view->name, $form_state['display_id']);
+
+  variable_del($key);
+
+  $form_state['values']['page_title'] = trim($form_state['values']['page_title']);
+  if (!empty($form_state['values']['page_title'])) {
+    variable_set($key, $form_state['values']['page_title']);
+  }
+}
+
+
+function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
+  // Don't bother altering non-argument forms
+  if ($form_state['type'] == 'argument') {
+    dpm($form_state);
+    $key = _page_title_build_views_keys($form_state['view']->name, $form_state['display_id'], $form_state['id']);
+
+    $form['options']['page_title'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Page Title Pattern'),
+      '#description' => t('Optionally enter a Page Title pattern for this argument'),
+      '#weight' => -1,
+      '#default_value' => variable_get($key, ''),
+    );
+    $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
+  }
+}
+
+function page_title_views_ui_config_item_form_submit($form, &$form_state) {
+  $view = $form_state['view'];
+  $key = _page_title_build_views_keys($view->name, $form_state['display_id'], $form_state['id']);
+  variable_del($key);
+
+  $form_state['values']['options']['page_title'] = trim($form_state['values']['options']['page_title']);
+  if (!empty($form_state['values']['options']['page_title'])) {
+    variable_set($key, $form_state['values']['options']['page_title']);
+  }
 }
