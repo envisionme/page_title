@@ -803,8 +803,21 @@ function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) 
       '#type' => 'textfield',
       '#title' => t('Page Title'),
       '#description' => t('Optionally use this field to define a page title pattern. You may use Global Tokens.'),
-      '#weight' => -1,
+      '#weight' => -5,
       '#default_value' => variable_get($key, ''),
+    );
+
+    // Add the token help to a collapsed fieldset at the end of the configuration page.
+    $form['token_help'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Available Tokens List'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#weight' => -2,
+    );
+    $form['token_help']['content'] = array(
+      '#type' => 'markup',
+      '#value' => theme('token_help', 'global'),
     );
 
     $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_display_form_submit';
