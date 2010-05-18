@@ -614,8 +614,39 @@ function page_title_page_get_title($raw = FALSE) {
         switch ($menu['page_callback']) {
           // If the page callback is a views page, then we can lookup the static title for a page
           case 'views_page' :
-            $key = "view-{$menu['page_arguments'][0]}-{$menu['page_arguments'][1]}";
-            $page_title_pattern = variable_get($key, '');
+            // Get the args, name and display_id
+            $args = $menu['page_arguments'];
+            $name = array_shift($args);
+            $display_id = array_shift($args);
+
+            // This is a view with no args provided - lets use the base display title
+            if (empty($args)) {
+              $page_title_pattern = variable_get(_page_title_build_views_keys($name, $display_id), '');
+            }
+            // There are args...
+            else {
+              // Get the active page view
+              $view = views_get_page_view();
+
+              // Grab the argument handlers
+              $h = $view->handlers['argument'];
+
+              // Splice them for the current arg (TODO: IS THIS RIGHT?)
+              $h = array_shift(array_splice($h, count($args)-1, 1));
+
+              // If there is a page title for the arg, use - otherwise... err... TODO...
+              if (!empty($h->options['page_title'])) {
+                // Grab the pre-built substitutions
+                $subs = $view->view->build_info['substitutions'];
+
+                // Grab the page title
+                $page_title_pattern = $h->options['page_title'];
+
+                // Apply any subs to the pattern
+                $page_title_pattern = str_replace(array_keys($subs), $subs, $page_title_pattern);
+              }
+            }
+
             break;
         }
       }
@@ -798,10 +829,13 @@ function page_title_views_ui_display_form_submit($form, &$form_state) {
 }
 
 
+/**
+ * Form Alter handler for the views ui config form (used for filters and args)
+ */
 function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
+  // TODO: Make sure this only happens on page handler views
   // Don't bother altering non-argument forms
   if ($form_state['type'] == 'argument') {
-    dpm($form_state);
     $key = _page_title_build_views_keys($form_state['view']->name, $form_state['display_id'], $form_state['id']);
 
     $form['options']['page_title'] = array(
@@ -815,6 +849,10 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
   }
 }
 
+
+/**
+ * Submit handler for the views ui config
+ */
 function page_title_views_ui_config_item_form_submit($form, &$form_state) {
   $view = $form_state['view'];
   $key = _page_title_build_views_keys($view->name, $form_state['display_id'], $form_state['id']);
