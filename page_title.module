@@ -634,13 +634,13 @@ function page_title_page_get_title($raw = FALSE) {
               // Splice them for the current arg (TODO: IS THIS RIGHT?)
               $h = array_shift(array_splice($h, count($args)-1, 1));
 
+              // Grab the page title
+              $page_title_pattern = $h->options['page_title']['page_title'];
+
               // If there is a page title for the arg, use - otherwise... err... TODO...
-              if (!empty($h->options['page_title'])) {
+              if (!empty($page_title_pattern)) {
                 // Grab the pre-built substitutions
                 $subs = $view->view->build_info['substitutions'];
-
-                // Grab the page title
-                $page_title_pattern = $h->options['page_title'];
 
                 // Apply any subs to the pattern
                 $page_title_pattern = str_replace(array_keys($subs), $subs, $page_title_pattern);
@@ -796,13 +796,14 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
  */
 function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
   if ($form_state['section'] == 'page_title') {
+    $form_state['title'] = t('Page: The <em>Page Title Pattern</em> setting');
     $view = $form_state['view'];
     $key = _page_title_build_views_keys($view->name, $form_state['display_id']);
 
     $form['page_title'] = array(
       '#type' => 'textfield',
       '#title' => t('Page Title'),
-      '#description' => t('Optionally use this field to define a page title pattern. You may use Global Tokens.'),
+      '#description' => t('Optionally use this field to define a Page Title Pattern (not the Page Title). You may use the Tokens listed below'),
       '#weight' => -5,
       '#default_value' => variable_get($key, ''),
     );
@@ -849,15 +850,35 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
   // TODO: Make sure this only happens on page handler views
   // Don't bother altering non-argument forms
   if ($form_state['type'] == 'argument') {
+    $type = get_class($form_state['view']->display_handler);
+    if ($type != 'views_plugin_display_page') return;
+
     $key = _page_title_build_views_keys($form_state['view']->name, $form_state['display_id'], $form_state['id']);
 
     $form['options']['page_title'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Page Title'),
+      '#weight' => -1,
+    );
+    $form['options']['page_title']['page_title'] = array(
       '#type' => 'textfield',
       '#title' => t('Page Title Pattern'),
-      '#description' => t('Optionally enter a Page Title pattern for this argument'),
-      '#weight' => -1,
+      '#description' => t('Optionally enter a Page Title Pattern for this argument. This will override the main view Page Title Pattern. You can also use the tokens below.'),
       '#default_value' => variable_get($key, ''),
     );
+    // Add the token help to a collapsed fieldset at the end of the configuration page.
+    $form['options']['page_title']['token_help'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Available Tokens List'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['options']['page_title']['token_help']['content'] = array(
+      '#type' => 'markup',
+      '#value' => theme('token_help', 'global'),
+    );
+
+
     $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
   }
 }
@@ -871,8 +892,8 @@ function page_title_views_ui_config_item_form_submit($form, &$form_state) {
   $key = _page_title_build_views_keys($view->name, $form_state['display_id'], $form_state['id']);
   variable_del($key);
 
-  $form_state['values']['options']['page_title'] = trim($form_state['values']['options']['page_title']);
-  if (!empty($form_state['values']['options']['page_title'])) {
-    variable_set($key, $form_state['values']['options']['page_title']);
+  $page_title = trim($form_state['values']['options']['page_title']['page_title']);
+  if (!empty($page_title)) {
+    variable_set($key, $page_title);
   }
 }
