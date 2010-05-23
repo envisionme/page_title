@@ -635,9 +635,9 @@ function page_title_page_get_title($raw = FALSE) {
               $h = array_shift(array_splice($h, count($args)-1, 1));
 
               // Grab the page title
-              $page_title_pattern = $h->options['page_title']['page_title'];
+              $page_title_pattern = isset($h->options['page_title']['page_title']) ? $h->options['page_title']['page_title'] : '';
 
-              // If there is a page title for the arg, use - otherwise... err... TODO...
+              // If a page title pattern was acquired, apply the %1, %2 type placeholder replacement.
               if (!empty($page_title_pattern)) {
                 // Grab the pre-built substitutions
                 $subs = $view->view->build_info['substitutions'];
@@ -758,6 +758,7 @@ function _page_title_build_views_keys($view_name, $display_id, $argument_id = NU
  * This is used to insert the Page Title settings details for a Page View (we're not interested in block views, for example)
  */
 function page_title_preprocess_views_ui_edit_tab(&$vars) {
+  // We're only interested in adding a section to page display's
   $type = get_class($vars['display']->handler);
   if ($type != 'views_plugin_display_page') return;
 
@@ -766,9 +767,12 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
   $view = $vars['view'];
 
   // Lookup the current title and strip any tags out.
-  $title = strip_tags(variable_get(_page_title_build_views_keys($view->name, $display_id), ''));
-  if (!$title) {
+  $title = strip_tags($view->display[$display_id]->handler->get_option('page_title'));
+  if (empty($title)) {
     $title = t('None');
+  }
+  else {
+    //$vars['display']->display_options['page_title'] = $vars['view']->display[$display_id]->display_options['page_title'] = $title;
   }
 
   // Create the page title settings category
@@ -779,7 +783,7 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
       $id => array(
         'content' => t('Page Title: !link', array('!link' => $vars['display']->handler->option_link($title, $id, '', t('Page Title')))),
         'links' => '',
-        'overridden' => FALSE,
+        'overridden' => TRUE,
         'defaulted' => FALSE,
         'changed' => !empty($vars['view']->changed_sections[$display_id .'-'. $id]),
         'class' => views_ui_item_css($display_id .'-'. $id),
@@ -788,41 +792,53 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
   );
 }
 
-
 /**
  * Implementation of hook_form_views_uit_edit_display_form_alter() (From hook_form_FORM_ID_alter()).
  *
  * This allows us to inject our Page Title form.
  */
 function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) {
-  if ($form_state['section'] == 'page_title') {
-    $form_state['title'] = t('Page: The <em>Page Title Pattern</em> setting');
-    $view = $form_state['view'];
-    $key = _page_title_build_views_keys($view->name, $form_state['display_id']);
+  // If the section isn't page_title, then dont bother altering
+  if ($form_state['section'] != 'page_title') return;
 
-    $form['page_title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Page Title'),
-      '#description' => t('Optionally use this field to define a Page Title Pattern (not the Page Title). You may use the Tokens listed below'),
-      '#weight' => -5,
-      '#default_value' => variable_get($key, ''),
-    );
+  // Set the section title
+  $form_state['title'] = t('Page: The <em>Page Title Pattern</em> setting');
 
-    // Add the token help to a collapsed fieldset at the end of the configuration page.
-    $form['token_help'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Available Tokens List'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#weight' => -2,
-    );
-    $form['token_help']['content'] = array(
-      '#type' => 'markup',
-      '#value' => theme('token_help', 'global'),
-    );
+  // Get the settings key
+  $key = _page_title_build_views_keys($form_state['view']->name, $form_state['display_id']);
 
-    $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_display_form_submit';
+  // Get the page tutle from the display handler
+  $default_page_title = $form_state['view']->display[$form_state['display_id']]->handler->get_option('page_title');
+
+  // If none returned, use the variables instead
+  if (empty($default_page_title)) {
+    $default_page_title = variable_get($key, '');
   }
+
+  // Define the Page Title field
+  $form['page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Page Title'),
+    '#description' => t('Optionally use this field to define a Page Title Pattern (not the Page Title). You may use the Tokens listed below'),
+    '#weight' => -5,
+    '#default_value' => $default_page_title,
+  );
+
+  // Add the token help to a collapsed fieldset at the end of the configuration page.
+  $form['token_help'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Available Tokens List'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#weight' => -2,
+  );
+  $form['token_help']['content'] = array(
+    '#type' => 'markup',
+    '#value' => theme('token_help', 'global'),
+  );
+
+  // Attach a submit handler - we're using unshift to get ours in first so our data gets stored in the object cache
+  array_unshift($form['buttons']['submit']['#submit'], 'page_title_views_ui_edit_display_form_submit');
 }
 
 
@@ -830,16 +846,8 @@ function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) 
  * Simple submit handler for the above form.
  * @SEE: page_title_form_views_ui_edit_display_form_alter()
  */
-function page_title_views_ui_display_form_submit($form, &$form_state) {
-  $view = $form_state['view'];
-  $key = _page_title_build_views_keys($view->name, $form_state['display_id']);
-
-  variable_del($key);
-
-  $form_state['values']['page_title'] = trim($form_state['values']['page_title']);
-  if (!empty($form_state['values']['page_title'])) {
-    variable_set($key, $form_state['values']['page_title']);
-  }
+function page_title_views_ui_edit_display_form_submit($form, &$form_state) {
+  $form_state['view']->display[$form_state['display_id']]->handler->set_option('page_title', trim($form_state['values']['page_title']));
 }
 
 
@@ -847,53 +855,107 @@ function page_title_views_ui_display_form_submit($form, &$form_state) {
  * Form Alter handler for the views ui config form (used for filters and args)
  */
 function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
-  // TODO: Make sure this only happens on page handler views
   // Don't bother altering non-argument forms
-  if ($form_state['type'] == 'argument') {
-    $type = get_class($form_state['view']->display_handler);
-    if ($type != 'views_plugin_display_page') return;
+  if ($form_state['type'] != 'argument') return;
 
-    $key = _page_title_build_views_keys($form_state['view']->name, $form_state['display_id'], $form_state['id']);
+  // Check the display handler is a page - if not, dont bother altering.
+  $type = get_class($form_state['view']->display_handler);
+  if ($type != 'views_plugin_display_page') return;
 
-    $form['options']['page_title'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Page Title'),
-      '#weight' => -1,
-    );
-    $form['options']['page_title']['page_title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Page Title Pattern'),
-      '#description' => t('Optionally enter a Page Title Pattern for this argument. This will override the main view Page Title Pattern. You can also use the tokens below.'),
-      '#default_value' => variable_get($key, ''),
-    );
-    // Add the token help to a collapsed fieldset at the end of the configuration page.
-    $form['options']['page_title']['token_help'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Available Tokens List'),
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-    $form['options']['page_title']['token_help']['content'] = array(
-      '#type' => 'markup',
-      '#value' => theme('token_help', 'global'),
-    );
+  // Now check the display is overriding the default - this is necessary as we cannot assign a page title to the default display.
+  if (!isset($form_state['view']->display_handler->options['arguments'])) return;
 
+  // Build a page title options fieldset wrapper
+  $temp_form['page_title'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Page Title'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => FALSE,
+  );
 
-    $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
-  }
+  // Add the Page Title field
+  $temp_form['page_title']['page_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Page Title Pattern'),
+    '#description' => t('Optionally enter a Page Title Pattern for this argument. This will override the main view Page Title Pattern. You can also use the tokens below.'),
+    '#default_value' => $form_state['handler']->options['page_title']['page_title'],
+  );
+
+  // Add the token help to a collapsed fieldset at the end of the configuration page.
+  $temp_form['page_title']['token_help'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Available Tokens List'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $temp_form['page_title']['token_help']['content'] = array(
+    '#type' => 'markup',
+    '#value' => theme('token_help', 'global'),
+  );
+
+  // Splice the temp form into the main form. We do this because there are no weights in the views form meaning Page Title can either be top or bottom (-1 or 1).
+  $offset = array_search('title', array_keys($form['options']));
+  $spliced_form = array_splice($form['options'], 0, $offset);
+  $form['options'] = array_merge($spliced_form, $temp_form, $form['options']);
+
+  // Add a submit handler to the forms buttons
+  $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
 }
-
 
 /**
  * Submit handler for the views ui config
  */
 function page_title_views_ui_config_item_form_submit($form, &$form_state) {
-  $view = $form_state['view'];
-  $key = _page_title_build_views_keys($view->name, $form_state['display_id'], $form_state['id']);
-  variable_del($key);
+  // TODO: How to get argument submit handlers to modify the caced view.... Is it possible?!
+  dpm($form_state);
+  dpm($form_state['view']);
 
-  $page_title = trim($form_state['values']['options']['page_title']['page_title']);
-  if (!empty($page_title)) {
-    variable_set($key, $page_title);
+  $form_state['view']->display[$form_state['display_id']]->display_options['arguments'][$form_state['id']]['page_title'] = trim($form_state['values']['page_title']);
+}
+
+
+/**
+ * Implementation of hook_form_FORM_ID_alter()
+ *
+ * This is simply used to embed a submit handler for the form
+ */
+function page_title_form_views_ui_edit_view_form_alter(&$form, &$form_state) {
+  // Need to use unshift to push our sumit handler in before the Views handler. Views unsets any deleted displays before we get a chance to find them.
+  array_unshift($form['buttons']['save']['#submit'], 'page_title_form_views_ui_edit_view_form_submit');
+}
+
+
+/**
+ * View Edit submit handler
+ */
+function page_title_form_views_ui_edit_view_form_submit(&$form, &$form_state) {
+  // For Each display...
+  foreach ($form_state['view']->display as $display_id => $display) {
+    // Test if this display is a page handler - no other types should have Page Titles..
+    $type = get_class($display->handler);
+    if ($type != 'views_plugin_display_page') continue;
+
+    // Build a variable key for the display-level page title
+    $key = _page_title_build_views_keys($form_state['view']->name, $display_id);
+
+    // Cleanup an page_title (if set)
+    $display->display_options['page_title'] = isset($display->display_options['page_title']) ? trim($display->display_options['page_title']) : NULL;
+
+    if (!empty($display->deleted) || empty($display->display_options['page_title'])) {
+      // If the display is deleted OR the page title has been set to blank, delete it from variables
+      variable_del($key);
+    }
+    else {
+      // Otherwise, store it
+      variable_set($key, $display->display_options['page_title']);
+    }
+
+    // TODO - Once the page title is in the view from the submit handler above, we can get this bit done...
+    // Now to store page titles for the arguments
+    foreach ($display->display_options['arguments'] as $arg_id => $arg) {
+      #dpm($arg_id);
+      #dpr($arg);
+    }
   }
 }
