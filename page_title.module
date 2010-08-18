@@ -844,7 +844,7 @@ function page_title_form_views_ui_edit_display_form_alter(&$form, &$form_state) 
 
 /**
  * Simple submit handler for the above form.
- * @SEE: page_title_form_views_ui_edit_display_form_alter()
+ * @see page_title_form_views_ui_edit_display_form_alter()
  */
 function page_title_views_ui_edit_display_form_submit($form, &$form_state) {
   $form_state['view']->display[$form_state['display_id']]->handler->set_option('page_title', trim($form_state['values']['page_title']));
@@ -907,7 +907,7 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
  * Submit handler for the views ui config
  */
 function page_title_views_ui_config_item_form_submit($form, &$form_state) {
-  // TODO: How to get argument submit handlers to modify the caced view.... Is it possible?!
+  // TODO: How to get argument submit handlers to modify the cached view.... Is it possible?!
   dpm($form_state);
   dpm($form_state['view']);
 
@@ -916,7 +916,7 @@ function page_title_views_ui_config_item_form_submit($form, &$form_state) {
 
 
 /**
- * Implementation of hook_form_FORM_ID_alter()
+ * Implementation of hook_form_FORM_ID_alter().
  *
  * This is simply used to embed a submit handler for the form
  */
@@ -953,9 +953,77 @@ function page_title_form_views_ui_edit_view_form_submit(&$form, &$form_state) {
 
     // TODO - Once the page title is in the view from the submit handler above, we can get this bit done...
     // Now to store page titles for the arguments
-    foreach ($display->display_options['arguments'] as $arg_id => $arg) {
-      #dpm($arg_id);
-      #dpr($arg);
+    if (isset($display->display_options['arguments'])) {
+      foreach ($display->display_options['arguments'] as $arg_id => $arg) {
+        #dpm($arg_id);
+        #dpr($arg);
+      }
     }
   }
+}
+
+
+/**
+ * Implementation of hook_views_api().
+ */
+function page_title_views_api() {
+  return array(
+    'api' => 2,
+  );
+}
+
+
+/**
+ * Implementation of hook_views_data().
+ *
+ * Provides the Page Title as a Views field for Views 2.
+ */
+function page_title_views_data() {
+  $data = array();
+  // Define the table.
+  $data['page_title']['table']['group'] = t('Page Title');
+  // Join the node table.
+  $data['page_title']['table']['join']['node'] = array(
+    'left_field' => 'nid',
+    'field' => 'id',
+  );
+  // Define the field.
+  $data['page_title']['page_title'] = array(
+    'title' => t('Title'),
+    'help' => t('A Page Title alternative to the Node: Title field.'),
+    'field' => array(
+      'field' => 'page_title', // The real field.
+      'group' => t('Page Title'), // The group it appears in on the UI.
+      'handler' => 'views_handler_field_node_page_title',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    // Information for accepting a Page Title as a filter.
+    'filter' => array(
+      'handler' => 'views_handler_filter_string', // We can "borrow" the node handler.
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_string', // We can "borrow" the node handler.
+    ),
+  );
+  return $data;
+}
+
+/**
+ * Implementation of hook_views_handlers().
+ */
+function page_title_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'page_title'),
+    ),
+    'handlers' => array(
+      // field handlers
+      'views_handler_field_node_page_title' => array(
+        'parent' => 'views_handler_field',
+      ),
+    ),
+  );
 }
