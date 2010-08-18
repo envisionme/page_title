@@ -201,6 +201,7 @@ function page_title_form_alter(&$form, $form_state, $form_id) {
           '#weight' => -4,
         );
       }
+      drupal_add_js(drupal_get_path('module', 'page_title') . '/page_title.js', 'module', 'header', FALSE, TRUE, FALSE);
     }
   }
 }
