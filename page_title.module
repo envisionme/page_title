@@ -908,8 +908,8 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
  */
 function page_title_views_ui_config_item_form_submit($form, &$form_state) {
   // TODO: How to get argument submit handlers to modify the cached view.... Is it possible?!
-  dpm($form_state);
-  dpm($form_state['view']);
+  #dpm($form_state);
+  #dpm($form_state['view']);
 
   $form_state['view']->display[$form_state['display_id']]->display_options['arguments'][$form_state['id']]['page_title'] = trim($form_state['values']['page_title']);
 }
