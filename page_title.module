@@ -621,11 +621,11 @@ function page_title_page_get_title($raw = FALSE) {
             $name = array_shift($args);
             $display_id = array_shift($args);
 
-            // If there are args for this view, process to see if this argument has a SPECIFIC page title pattern
-            if (!empty($args)) {
-              // Get the active page view
-              $view = views_get_page_view();
+            // Get the active page view
+            $view = views_get_page_view();
 
+            // If there are args for this view, process to see if this argument has a SPECIFIC page title pattern
+            if (!empty($args) && !empty($view->handlers['argument'])) {
               // Grab the argument handlers
               $h = $view->handlers['argument'];
 
