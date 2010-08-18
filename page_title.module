@@ -56,12 +56,14 @@ function page_title_requirements($phase) {
   return $requirements;
 }
 
+
 /**
  * Implementation of hook_perm().
  */
 function page_title_perm() {
   return array('set page title', 'administer page titles');
 }
+
 
 
 /**
@@ -747,6 +749,11 @@ function page_title_content_extra_fields($type_name) {
   return $extra;
 }
 
+
+/**
+ * Internal function for generating a key for a given view, display and optional argument.
+ * TODO: Should probably clean these up before making the key (so the return value is [a-z0-9\-])
+ */
 function _page_title_build_views_keys($view_name, $display_id, $argument_id = NULL) {
   return 'page_title-'. implode('-', array_filter(array($view_name, $display_id, $argument_id)));
 }
@@ -791,6 +798,7 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
     ),
   );
 }
+
 
 /**
  * Implementation of hook_form_views_uit_edit_display_form_alter() (From hook_form_FORM_ID_alter()).
@@ -902,6 +910,7 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
   // Add a submit handler to the forms buttons
   $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
 }
+
 
 /**
  * Submit handler for the views ui config
