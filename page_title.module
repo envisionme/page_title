@@ -621,32 +621,32 @@ function page_title_page_get_title($raw = FALSE) {
             $name = array_shift($args);
             $display_id = array_shift($args);
 
-            // This is a view with no args provided - lets use the base display title
-            if (empty($args)) {
-              $page_title_pattern = variable_get(_page_title_build_views_keys($name, $display_id), '');
-            }
-            // There are args...
-            else {
+            // If there are args for this view, process to see if this argument has a SPECIFIC page title pattern
+            if (!empty($args)) {
               // Get the active page view
               $view = views_get_page_view();
 
               // Grab the argument handlers
               $h = $view->handlers['argument'];
 
-              // Splice them for the current arg (TODO: IS THIS RIGHT?)
+              // Splice the arguments and get the key for the current arg.
               $h = array_shift(array_splice($h, count($args)-1, 1));
 
-              // Grab the page title
-              $page_title_pattern = isset($h->options['page_title']['page_title']) ? $h->options['page_title']['page_title'] : '';
+              // Get the Page Title Pattern from the options array for this handler
+              $page_title_pattern = isset($h->options['page_title']) ? $h->options['page_title'] : '';
 
-              // If a page title pattern was acquired, apply the %1, %2 type placeholder replacement.
-              if (!empty($page_title_pattern)) {
+              // If a page title pattern was found AND it contains a "%", assume there are placeholders and apply the %1, %2 type placeholder replacement.
+              if (!empty($page_title_pattern) && strpos($page_title_pattern, '%') !== FALSE) {
                 // Grab the pre-built substitutions
                 $subs = $view->view->build_info['substitutions'];
 
                 // Apply any subs to the pattern
                 $page_title_pattern = str_replace(array_keys($subs), $subs, $page_title_pattern);
               }
+            }
+            // This is a view with no args provided, or the specific arg has no title - lets use the base display title
+            else {
+              $page_title_pattern = variable_get(_page_title_build_views_keys($name, $display_id), '');
             }
 
             break;
@@ -751,11 +751,11 @@ function page_title_content_extra_fields($type_name) {
 
 
 /**
- * Internal function for generating a key for a given view, display and optional argument.
+ * Internal function for generating a key for a given view and display. Argument Page Title settings are not stored as variables.
  * TODO: Should probably clean these up before making the key (so the return value is [a-z0-9\-])
  */
-function _page_title_build_views_keys($view_name, $display_id, $argument_id = NULL) {
-  return 'page_title-'. implode('-', array_filter(array($view_name, $display_id, $argument_id)));
+function _page_title_build_views_keys($view_name, $display_id) {
+  return 'page_title-'. implode('-', array_filter(array($view_name, $display_id)));
 }
 
 
@@ -777,9 +777,6 @@ function page_title_preprocess_views_ui_edit_tab(&$vars) {
   $title = strip_tags($view->display[$display_id]->handler->get_option('page_title'));
   if (empty($title)) {
     $title = t('None');
-  }
-  else {
-    //$vars['display']->display_options['page_title'] = $vars['view']->display[$display_id]->display_options['page_title'] = $title;
   }
 
   // Create the page title settings category
@@ -879,7 +876,6 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
     '#title' => t('Page Title'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#tree' => FALSE,
   );
 
   // Add the Page Title field
@@ -887,7 +883,8 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Page Title Pattern'),
     '#description' => t('Optionally enter a Page Title Pattern for this argument. This will override the main view Page Title Pattern. You can also use the tokens below.'),
-    '#default_value' => $form_state['handler']->options['page_title']['page_title'],
+    '#default_value' => $form_state['handler']->options['page_title'],
+    '#parents' => array('options', 'page_title'),
   );
 
   // Add the token help to a collapsed fieldset at the end of the configuration page.
@@ -906,21 +903,6 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
   $offset = array_search('title', array_keys($form['options']));
   $spliced_form = array_splice($form['options'], 0, $offset);
   $form['options'] = array_merge($spliced_form, $temp_form, $form['options']);
-
-  // Add a submit handler to the forms buttons
-  $form['buttons']['submit']['#submit'][] = 'page_title_views_ui_config_item_form_submit';
-}
-
-
-/**
- * Submit handler for the views ui config
- */
-function page_title_views_ui_config_item_form_submit($form, &$form_state) {
-  // TODO: How to get argument submit handlers to modify the cached view.... Is it possible?!
-  #dpm($form_state);
-  #dpm($form_state['view']);
-
-  $form_state['view']->display[$form_state['display_id']]->display_options['arguments'][$form_state['id']]['page_title'] = trim($form_state['values']['page_title']);
 }
 
 
@@ -960,14 +942,7 @@ function page_title_form_views_ui_edit_view_form_submit(&$form, &$form_state) {
       variable_set($key, $display->display_options['page_title']);
     }
 
-    // TODO - Once the page title is in the view from the submit handler above, we can get this bit done...
-    // Now to store page titles for the arguments
-    if (isset($display->display_options['arguments'])) {
-      foreach ($display->display_options['arguments'] as $arg_id => $arg) {
-        #dpm($arg_id);
-        #dpr($arg);
-      }
-    }
+    // Note: There is no need to store page titles for the arguments are they are included inside the serialized options
   }
 }
 
