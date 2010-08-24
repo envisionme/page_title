@@ -1,0 +1,9 @@
+<?php
+// $Id$
+
+/**
+ * Imeplementation of hook_views_api()
+ */
+function page_title_views_test_views_api() {
+  return array('api' => 2.0);
+}

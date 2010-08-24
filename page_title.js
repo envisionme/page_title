@@ -23,7 +23,7 @@ Drupal.behaviors.pageTitleCounter = function(context) {
     var valueBox = $('div.description', wrapper)
                     .append('<br/><span class="counter">Characters Entered: <span class="value">0</span></span>')
                     .find('.value')
-                    .html(getLength(inputBox));
+                    .text(getLength(inputBox));
 
     $('input[name=page_title]', wrapper).keyup(function(e) { $(valueBox).text(getLength(inputBox)); });
   });

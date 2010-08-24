@@ -1,0 +1,5 @@
+name = Page Title Views SimpleTest
+description = SimpleTest dependency modue for testing Views with Page Title
+core = 6.x
+dependencies[] = page_title
+dependencies[] = views
