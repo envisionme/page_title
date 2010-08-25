@@ -1,6 +1,15 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Taxonomy implementations of the page title hooks
+ */
 
 
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function taxonomy_page_title_alter(&$title) {
   // If we're looking at a taxonomy term page, get the term title
   if (arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2))) {
@@ -12,7 +21,9 @@ function taxonomy_page_title_alter(&$title) {
 }
 
 
-
+/**
+ * Implementation of hook_page_title_pattern_alter().
+ */
 function taxonomy_page_title_pattern_alter(&$pattern, &$types) {
   // Taxonomy Term Page
   if (arg(0) == 'taxonomy' && arg(1) == 'term' && is_numeric(arg(2)) && module_exists('taxonomy')) {

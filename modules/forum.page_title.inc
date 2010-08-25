@@ -1,5 +1,15 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * Forum implementations of the page title hooks
+ */
+
+
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function forum_page_title_alter(&$title) {
   // Check we're on a forum page and if there is a number to confirm it's a container or forum (rather than root)
   if (arg(0) == 'forum' && is_numeric(arg(1))) {
@@ -11,6 +21,9 @@ function forum_page_title_alter(&$title) {
 }
 
 
+/**
+ * Implementation of hook_page_title_pattern_alter().
+ */
 function forum_page_title_pattern_alter(&$pattern, &$types) {
   // Forums Page title Patterns
   if (arg(0) == 'forum') {

@@ -2,6 +2,10 @@
 // $Id$
 
 /**
+ * @file
+ * Provide a view for testing - it simply tests the core "page" view and the User ID Argument with a placeholder and token.
+
+/**
  * Implementation of hook_views_default_views().
  */
 function page_title_views_test_views_default_views() {

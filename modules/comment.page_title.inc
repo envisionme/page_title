@@ -1,5 +1,15 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * Comment implementations of the page title hooks
+ */
+
+
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function comment_page_title_alter(&$title) {
   if (arg(0) == 'comment' && arg(1) == 'reply' && is_numeric(arg(2))) {
     // As this is a comment page, the node ID is in position 2, whereas a node page is position 1
@@ -17,6 +27,9 @@ function comment_page_title_alter(&$title) {
 }
 
 
+/**
+ * Implementation of hook_page_title_pattern_alter().
+ */
 function comment_page_title_pattern_alter(&$pattern, &$types) {
   // Comment reply page
   if (arg(0) == 'comment' && arg(1) == 'reply' && is_numeric(arg(2))) {

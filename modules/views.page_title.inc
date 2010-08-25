@@ -1,5 +1,15 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * Views implementations of the page title hooks
+ */
+
+
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function views_page_title_pattern_alter(&$pattern, &$types) {
   $menu = menu_get_item();
 

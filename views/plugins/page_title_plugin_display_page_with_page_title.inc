@@ -1,6 +1,11 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Custom Views display handler. Extends the Page display by adding our own page title option to it.
+ */
+
 class page_title_plugin_display_page_with_page_title extends views_plugin_display_page {
   function option_definition() {
     $options = parent::option_definition();
@@ -16,8 +21,8 @@ class page_title_plugin_display_page_with_page_title extends views_plugin_displa
     if (empty($title)) {
       $title = t('None');
     }
-    elseif (strlen($title) > 16) {
-      $title = substr($title, 0,16) .'...';
+    elseif (drupal_strlen($title) > 16) {
+      $title = drupal_substr($title, 0, 16) .'...';
     }
 
     $options['page_title_pattern'] = array(

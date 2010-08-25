@@ -1,5 +1,15 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * Page Title implementations of the page title hooks
+ */
+
+
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function page_title_page_title_alter(&$title) {
  // If nothing above set a title, give the legacy function a chance to act
   if (empty($title)) {
@@ -13,6 +23,9 @@ function page_title_page_title_alter(&$title) {
 }
 
 
+/**
+ * Implementation of hook_page_title_pattern_alter().
+ */
 function page_title_page_title_pattern_alter(&$pattern, &$data = array()) {
   // If frontpage, then use the frontpage pattern and set the title.
   if (drupal_is_front_page()) {

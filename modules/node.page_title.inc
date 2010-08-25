@@ -1,5 +1,15 @@
 <?php
+// $Id$
 
+/**
+ * @file
+ * Node implementations of the page title hooks
+ */
+
+
+/**
+ * Implementation of hook_page_title_alter().
+ */
 function node_page_title_alter(&$title) {
   if (arg(0) == 'node' && is_numeric(arg(1))) {
     // Get the node
@@ -13,6 +23,9 @@ function node_page_title_alter(&$title) {
 }
 
 
+/**
+ * Implementation of hook_page_title_pattern_alter().
+ */
 function node_page_title_pattern_alter(&$pattern, &$types) {
   if ((arg(0) == 'node' && is_numeric(arg(1)))) {
     $types['node'] = menu_get_object();

@@ -408,10 +408,11 @@ function page_title_user($op, &$edit, &$account) {
 function page_title_get_title($raw = FALSE) {
   static $title;
 
+  // This is used to internally "cache" the title in case we call the function more than once (which we shouldn't).
   if (empty($title)) {
     // Give other modules the oppertunity to use hook_page_title_alter().
     drupal_alter('page_title', $title);
-   }
+  }
 
   // Return the title in a safe form (any tags removed (such as emphasised or strong tags) and eny entiied encoded)
   return $raw ? $title : filter_xss($title, array());
@@ -681,7 +682,7 @@ function page_title_views_plugins() {
 
 
 /**
- * Implementation of hook_init()
+ * Implementation of hook_init().
  */
 function page_title_init() {
   // Include the admin CSS for the report page - TODO: Is there a better way?
@@ -721,6 +722,9 @@ function page_title_get_module_apis() {
 }
 
 
+/**
+ * Implementation of hook_page_title_api().
+ */
 function page_title_page_title_api() {
   return array(
     'api' => 1,
@@ -728,6 +732,9 @@ function page_title_page_title_api() {
   );
 }
 
+/**
+ * Core implementations of hook_page_title_api().
+ */
 function taxonomy_page_title_api() { return page_title_page_title_api(); }
 function node_page_title_api() { return page_title_page_title_api(); }
 function comment_page_title_api() { return page_title_page_title_api(); }
