@@ -18,8 +18,9 @@
 function page_title_help($path, $arg) {
   $output = NULL;
   switch ($path) {
-    case 'admin/content/page_title':
-      $output  = '<p>'. t('Page Title provides control over the &lt;title> element on a page using token patterns and an optional textfield to override the title of the item (be it a node, term, user or other). The Token Scope column lets you know which tokens are available for this field (Global is always available). Please click on the <strong><em>more help&hellip;</em></strong> link below if you need further assistance.') .'</p>';
+    case 'admin/settings/page-title':
+      $output  = '<p>'. t('Page Title provides control over the <code>&lt;title></code> element on a page using token patterns and an optional textfield to override the title of the item (be it a node, term, user or other). The Token Scope column lets you know which tokens are available for this field (Global is always available). Please click on the <strong><em>more help&hellip;</em></strong> link below if you need further assistance.') .'</p>';
+      $output .= '<p>'. l(t('More Help...'), 'admin/help/page_title') .'</p>';
       break;
     case 'admin/help#page_title':
       $output  = '<p>'. t('Drupal\'s default page title follows one of two patterns:') .'</p>';
@@ -72,9 +73,9 @@ function page_title_perm() {
 function page_title_menu() {
   $items = array();
 
-  $items['admin/content/page_title'] = array(
-    'title' => 'Page titles',
-    'description' => 'Enhanced control over the page titles (in the &lt;head&gt; tag).',
+  $items['admin/settings/page-title'] = array(
+    'title' => 'Page title',
+    'description' => 'Configure the page titles for your site (the title in the &lt;head&gt; tag).',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('page_title_admin_settings'),
     'access callback' => 'user_access',

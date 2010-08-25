@@ -11,6 +11,7 @@
  */
 function page_title_install() {
   drupal_install_schema('page_title');
+  drupal_set_message(t('Page Title has been installed. Please go to <strong>Admin > Settings > Page title</strong> to configure the settings for your site, or !link', array('!link' => l(t('click here'), 'admin/settings/page-title'))));
 }
 
 
