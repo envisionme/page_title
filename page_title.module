@@ -224,6 +224,7 @@ function page_title_form_taxonomy_form_term_alter(&$form, &$form_state) {
       '#maxlength' => 255,
       '#weight' => -20,
     );
+    drupal_add_js(drupal_get_path('module', 'page_title') . '/page_title.js', 'module', 'header', FALSE, TRUE, FALSE);
   }
 }
 
@@ -244,6 +245,7 @@ function page_title_form_forum_form_forum_alter(&$form, &$form_state) {
       '#maxlength' => 255,
       '#weight' => -20,
     );
+    drupal_add_js(drupal_get_path('module', 'page_title') . '/page_title.js', 'module', 'header', FALSE, TRUE, FALSE);
   }
 }
 
@@ -272,6 +274,7 @@ function page_title_form_user_profile_form_alter(&$form, &$form_state) {
       '#maxlength' => 255,
       '#weight' => 20,
     );
+    drupal_add_js(drupal_get_path('module', 'page_title') . '/page_title.js', 'module', 'header', FALSE, TRUE, FALSE);
   }
 }
 
@@ -406,11 +409,11 @@ function page_title_user($op, &$edit, &$account) {
  * @return
  *   string the title for the current page
  */
-function page_title_get_title($raw = FALSE) {
-  static $title;
+function page_title_get_title($raw = FALSE, $flush = FALSE) {
+  static $title = NULL;
 
   // This is used to internally "cache" the title in case we call the function more than once (which we shouldn't).
-  if (empty($title)) {
+  if ($flush || is_null($title)) {
     // Give other modules the oppertunity to use hook_page_title_alter().
     drupal_alter('page_title', $title);
   }
