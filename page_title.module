@@ -512,6 +512,9 @@ function page_title_page_get_title($raw = FALSE) {
     $title = token_replace_multiple($page_title_pattern, $types);
   }
 
+  // Trimi trailing whitespace from the title
+  $title = trim($title);
+
   // Use filter_xss to remove any tags and to entity encode content.
   return $raw ? $title : filter_xss($title, array());
 }
