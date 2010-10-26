@@ -332,7 +332,7 @@ function page_title_node_type_form_submit($form, &$form_state) {
 function page_title_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   switch ($op) {
     case 'update':
-      if (user_access('set page title')) {
+      if (isset($node->page_title) && user_access('set page title')) {
         db_query("DELETE FROM {page_title} WHERE type = 'node' AND id = %d", $node->nid);
       }
       // fallthrough to insert intentional!
@@ -360,7 +360,7 @@ function page_title_taxonomy($op, $type, $edit) {
 
   switch ($op) {
     case 'update':
-      if (user_access('set page title')) {
+      if (isset($edit['page_title']) && user_access('set page title')) {
         db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
       }
       // Fallthrough to insert is intentional!
@@ -383,7 +383,7 @@ function page_title_taxonomy($op, $type, $edit) {
 function page_title_user($op, &$edit, &$account) {
   switch ($op) {
     case 'update':
-      if (user_access('set page title')) {
+      if (isset($edit['page_title']) && user_access('set page title')) {
         db_query("DELETE FROM {page_title} WHERE type = 'user' AND id = %d", $account->uid);
       }
       // Fallthrough to insert is intentional!
