@@ -13,7 +13,7 @@
 function views_page_title_pattern_alter(&$pattern, &$types) {
   $menu = menu_get_item();
 
-  if ($menu['page_callback'] == 'views_page') {
+  if ($menu['page_callback'] == 'views_page' && is_array($menu['page_arguments'])) {
     // Get the args, name and display_id
     $args = $menu['page_arguments'];
     $name = array_shift($args);
@@ -21,6 +21,9 @@ function views_page_title_pattern_alter(&$pattern, &$types) {
 
     // Get the active page view
     $view = views_get_page_view();
+
+    // Sometimes there wont be a view on a views page - eg if you dont have access
+    if (!$view) return;
 
     // If there are args for this view, process to see if this argument has a SPECIFIC page title pattern
     if (!empty($args) && !empty($view->handlers['argument'])) {
