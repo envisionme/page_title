@@ -70,7 +70,7 @@ class PageTitleTestCase extends DrupalWebTestCase {
     );
 
     // Save the settings
-    $this->drupalPost('admin/content/page_title', $settings, t('Save configuration'));
+    $this->drupalPost('admin/settings/page-title', $settings, t('Save configuration'));
     $this->assertText(t('The configuration options have been saved.'), t('The configuration saved message was found'), 'Page Title');
 
 
@@ -92,10 +92,10 @@ class PageTitleTestCase extends DrupalWebTestCase {
     /**
      * Lets check a "default" page, such a the page title admin form
      */
-    $this->drupalGet('admin/content/page_title');
+    $this->drupalGet('admin/settings/page-title');
     $title = '<title>'. $settings['page_title_default'] .'</title>';
     $this->pass(check_plain($title));
-    $title = str_replace('[page-title]', 'Page titles', $title);
+    $title = str_replace('[page-title]', 'Page title', $title);
     $this->pass(check_plain($title));
     $this->assertRaw($title, t('Correct default title in the head.'), 'Page Title');
 
