@@ -698,7 +698,7 @@ function page_title_init() {
 
 
 /**
- * Get a list of modules that support the current views API.
+ * Get a list of modules that support the current Page Title API.
  */
 function page_title_get_module_apis() {
   static $cache = NULL;
