@@ -44,13 +44,32 @@ function page_title_help($path, $arg) {
 function page_title_requirements($phase) {
   $requirements = array();
   if ($phase == 'runtime') {
-    if (db_table_exists('page_title_old')) {
-      $requirements['upgrade_table'] = array(
-        'title' => t('Page Title upgrade table present'),
-        'value' => '',
-        'description' => t('The Page Title upgrade table (<code>page_title_old</code>) is present. This should be manually removed once the administrator can confirm the upgrade was successfull.'),
-        'severity' => REQUIREMENT_WARNING,
+    if (!_page_title_has_had_update_6200()) {
+      $requirements['page_title_version'] = array(
+        'title' => t('Page title version'),
+        'value' => t('Out of date'),
+        'description' => t('The Page Title module must be updated. You should run the !link immediately.', array('!link' => l(t('database update script'), 'update.php'))),
+        'severity' => REQUIREMENT_ERROR,
       );
+    }
+    else {
+      if (db_table_exists('page_title_old')) {
+        $requirements['upgrade_table'] = array(
+          'title' => t('Page Title upgrade table present'),
+          'value' => '',
+          'description' => t('The Page Title upgrade table (<code>page_title_old</code>) is present. You can remove it !link', array(
+            '!link' => l(t('using this script'), 'admin/settings/page-title/drop-old-table'),
+          )),
+          'severity' => REQUIREMENT_WARNING,
+        );
+      }
+
+      if (db_table_exists('page_title')) {
+
+      }
+      else {
+
+      }
     }
   }
 
@@ -83,6 +102,17 @@ function page_title_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'page_title.admin.inc',
   );
+
+  if (db_table_exists('page_title_old')) {
+    $items['admin/settings/page-title/drop-old-table'] = array(
+      'title' => 'Drop Old Page Title Table?',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('page_title_drop_old_table_form'),
+      'access arguments' => array('administer site configuration'),
+      'type' => MENU_CALLBACK,
+      'file' => 'page_title.legacy.inc',
+    );
+  }
 
   return $items;
 }
@@ -739,3 +769,11 @@ function comment_page_title_api() { return page_title_page_title_api(); }
 function forum_page_title_api() { return page_title_page_title_api(); }
 function user_page_title_api() { return page_title_page_title_api(); }
 function views_page_title_api() { return page_title_page_title_api(); }
+
+
+/**
+ * Internal function for checking if Page Title is ok to run
+ */
+function _page_title_has_had_update_6200() {
+  return drupal_get_installed_schema_version('page_title') >= 6200;
+}
