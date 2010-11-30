@@ -92,6 +92,8 @@ function page_title_uninstall() {
   variable_del('page_title_user_showfield');
   variable_del('page_title_pager_pattern');
   variable_del('page_title_forum_root_title');
+  variable_del('page_title_comment_reply');
+  variable_del('page_title_comment_child_reply');
 
   // Clear the node specific variables
   $types = node_get_types('names');
