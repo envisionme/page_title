@@ -1,4 +1,10 @@
 <?php
+// $Id$
+
+/**
+ * @file
+ * Small include for the legacy old table handling
+ */
 
 function page_title_drop_old_table_form() {
   if (!db_table_exists('page_title_old')) {

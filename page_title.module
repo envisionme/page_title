@@ -44,7 +44,8 @@ function page_title_help($path, $arg) {
 function page_title_requirements($phase) {
   $requirements = array();
   if ($phase == 'runtime') {
-    if (!_page_title_has_had_update_6200()) {
+    // Are we on an old version?
+    if (!page_title_is_up_to_date()) {
       $requirements['page_title_version'] = array(
         'title' => t('Page title version'),
         'value' => t('Out of date'),
@@ -52,7 +53,9 @@ function page_title_requirements($phase) {
         'severity' => REQUIREMENT_ERROR,
       );
     }
+    // Nope - we're on the latest version
     else {
+      // Does the old table exist (it is left after the upgrade in case an admin wants to check the upgrade went ok)
       if (db_table_exists('page_title_old')) {
         $requirements['upgrade_table'] = array(
           'title' => t('Page Title upgrade table present'),
@@ -64,11 +67,25 @@ function page_title_requirements($phase) {
         );
       }
 
-      if (db_table_exists('page_title')) {
-
+      // If the page title module exists, check it has the right columns - there are reports of upgrade issues.
+      // If the table doesn't exists, reinstall the module!
+      if (!db_table_exists('page_title') || db_column_exists('page_title', 'nid')) {
+        $requirements['page_title_version'] = array(
+          'title' => t('Page title version'),
+          'value' => t('Incorrect Schema'),
+          'description' => t('It appears Drupal thinks the module is up to date, however the database schema is incorrect. Please uninstall and reinstall the module.'),
+          'severity' => REQUIREMENT_ERROR,
+        );
       }
       else {
+        // Everything seems ok...
+        $rows = db_result(db_query('SELECT COUNT(*) FROM {page_title}'));
 
+        $requirements['page_title_version'] = array(
+          'title' => t('Page title version'),
+          'value' => t('Enabled (<code>page_title</code> table contains !rows)', array('!rows' => format_plural($rows, '1 row', '@count rows'))),
+          'severity' => REQUIREMENT_OK,
+        );
       }
     }
   }
@@ -774,6 +791,6 @@ function views_page_title_api() { return page_title_page_title_api(); }
 /**
  * Internal function for checking if Page Title is ok to run
  */
-function _page_title_has_had_update_6200() {
-  return drupal_get_installed_schema_version('page_title') >= 6200;
+function page_title_is_up_to_date() {
+  return drupal_get_installed_schema_version('page_title') >= max(drupal_get_schema_versions('page_title'));
 }
