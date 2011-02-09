@@ -21,7 +21,7 @@ function page_title_admin_settings() {
   $pattern_form_element = array(
     '#type' => 'textfield',
     '#size' => 30,
-    '#maxlength' => 256,
+    '#maxlength' => 255,
   );
 
 
