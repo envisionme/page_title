@@ -728,6 +728,50 @@ function page_title_views_plugins() {
 
 
 /**
+ * Get the Page Title settings
+ */
+function page_title_get_settings() {
+  if ($cache = cache_get('page_title:settings')) {
+    return $cache->data;
+  }
+
+  // Get the settings from hook_page_title_settings().
+  $settings = module_invoke_all('page_title_settings');
+  
+  // For each setting, apply a "default" mask (this makes it easier to use
+  // later as we can assume presence)
+  foreach ($settings as $k => $v) {
+    $settings[$k] = (array) $v + array(
+      'label' => '',
+      'label arguments' => array(),
+      'required' => FALSE,
+      'show field' => FALSE,
+      'description' => '',
+      'description arguments' => array(),
+      'weight' => 0,
+      'default' => '',
+    );
+  }
+
+  // Now sort
+  uasort($settings, '_page_title_settings_sort');
+
+  // Cache this so we dont have to do this EVERY time
+  cache_set('page_title:settings', $settings);
+
+  return $settings;
+}
+
+
+/**
+ * Internal function for sorting the page title settings array.
+ */
+function _page_title_settings_sort($a, $b) {
+  return $a['weight'] < $b['weight'] ? -1 : ($a['weight'] > $b['weight'] ? 1 : ($a['label'] < $b['label'] ? -1 : 1));
+}
+
+
+/**
  * Implementation of hook_init().
  */
 function page_title_init() {
@@ -781,6 +825,7 @@ function page_title_page_title_api() {
 /**
  * Core implementations of hook_page_title_api().
  */
+function blog_page_title_api() { return page_title_page_title_api(); }
 function taxonomy_page_title_api() { return page_title_page_title_api(); }
 function node_page_title_api() { return page_title_page_title_api(); }
 function comment_page_title_api() { return page_title_page_title_api(); }
