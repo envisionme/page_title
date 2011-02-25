@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Contains the Views field handler for the Page Title field.
