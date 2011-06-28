@@ -408,6 +408,7 @@ function page_title_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
 function page_title_taxonomy($op, $type, $edit) {
   if ($type == 'vocabulary') {
     switch ($op) {
+      case 'delete' :
       case 'update' :
       case 'insert' :
         // Flush the settings on update/insert.
