@@ -10,10 +10,11 @@
  * Implementation of hook_page_title_alter().
  */
 function forum_page_title_alter(&$title) {
+  $menu_item = menu_get_item();
+
   // Check we're on a forum page and if there is a number to confirm it's a
   // container or forum (rather than root)
-  if ( $menu_item = menu_get_item() &&
-       !strncmp($menu_item['path'], 'forum/%', 7) &&
+  if ( !strncmp($menu_item['path'], 'forum/%', 7) &&
        ($term = taxonomy_get_term($menu_item['page_arguments'][0])) &&
        variable_get('page_title_vocab_'. $term->vid .'_showfield', 0) &&
        ($forum_title = page_title_load_title($term->tid, 'term')) ) {
