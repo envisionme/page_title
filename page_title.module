@@ -370,6 +370,9 @@ function page_title_node_type_form_submit($form, &$form_state) {
 
   // For some reason the node module adds the fieldset as a separate entry in the variables table... we dont want this!
   variable_del('page_title_'. $form_state['values']['type']);
+
+  // Flush the settings on update/insert.
+  page_title_get_settings(TRUE);
 }
 
 
@@ -403,23 +406,32 @@ function page_title_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  * Implementation of hook_taxonomy().
  */
 function page_title_taxonomy($op, $type, $edit) {
-  if ($type == 'vocabulary') return;
+  if ($type == 'vocabulary') {
+    switch ($op) {
+      case 'update' :
+      case 'insert' :
+        // Flush the settings on update/insert.
+        page_title_get_settings(TRUE);
+        break;
+    }
+  }
+  elseif ($type == 'term') {
+    switch ($op) {
+      case 'update':
+        if (isset($edit['page_title']) && user_access('set page title')) {
+          db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
+        }
+        // Fallthrough to insert is intentional!
+      case 'insert':
+        if (isset($edit['page_title']) && drupal_strlen(trim($edit['page_title'])) > 0 && user_access('set page title')) {
+          db_query("INSERT INTO {page_title} VALUES('term', %d, '%s')", $edit['tid'], $edit['page_title']);
+        }
+        break;
 
-  switch ($op) {
-    case 'update':
-      if (isset($edit['page_title']) && user_access('set page title')) {
+      case 'delete':
         db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
-      }
-      // Fallthrough to insert is intentional!
-    case 'insert':
-      if (isset($edit['page_title']) && drupal_strlen(trim($edit['page_title'])) > 0 && user_access('set page title')) {
-        db_query("INSERT INTO {page_title} VALUES('term', %d, '%s')", $edit['tid'], $edit['page_title']);
-      }
-      break;
-
-    case 'delete':
-      db_query("DELETE FROM {page_title} WHERE type = 'term' AND id = %d", $edit['tid']);
-      break;
+        break;
+    }
   }
 }
 
@@ -738,7 +750,7 @@ function page_title_get_settings($flush = FALSE) {
   // Flush the settings, if set.
   if ($flush) {
     $settings = NULL;
-    cache_clear_all('page_title:settings');
+    cache_clear_all('page_title:settings', 'cache');
   }
 
   // If we have it statically cached, return it.

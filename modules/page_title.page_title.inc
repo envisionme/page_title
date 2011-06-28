@@ -50,7 +50,7 @@ function page_title_page_title_settings() {
       'default' => '[page-title] | [site-name]',
     ),
     'page_title_front' => array(
-      'label' => 'Fronpage',
+      'label' => 'Frontpage',
       'scopes' => array('global'),
       'show field' => FALSE,
       'description' => 'This pattern will be used for the site frontpage',
