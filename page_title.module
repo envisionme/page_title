@@ -539,7 +539,8 @@ function page_title_page_get_title($raw = FALSE) {
 
     // If pattern is emtpy (either if the type is not overridable or simply not set) fallback to the default pattern)
     if (empty($page_title_pattern)) {
-      $page_title_pattern = variable_get('page_title_default', '[page-title] | [site-name]');
+      $settings = page_title_get_settings();
+      $page_title_pattern = variable_get('page_title_default', $settings['page_title_default']['default']);
     }
 
     // Append the pattern for pages with a pager on them
@@ -731,8 +732,23 @@ function page_title_views_plugins() {
 /**
  * Get the Page Title settings
  */
-function page_title_get_settings() {
+function page_title_get_settings($flush = FALSE) {
+  static $settings = NULL;
+
+  // Flush the settings, if set.
+  if ($flush) {
+    $settings = NULL;
+    cache_clear_all('page_title:settings');
+  }
+
+  // If we have it statically cached, return it.
+  if (!empty($settings)) {
+    return $settings;
+  }
+
+  // Get from Cache
   if ($cache = cache_get('page_title:settings')) {
+    $settings = $cache->data;
     return $cache->data;
   }
 

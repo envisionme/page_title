@@ -29,7 +29,8 @@ function page_title_page_title_pattern_alter(&$pattern, &$data = array()) {
   // If frontpage, then use the frontpage pattern and set the title.
   if (drupal_is_front_page()) {
     // Get the frontpage pattern
-    $pattern = variable_get('page_title_front', '[site-name] | [site-slogan]');
+    $settings = page_title_get_settings();
+    $pattern = variable_get('page_title_front', $settings['page_title_front']['default']);
   }
 }
 
