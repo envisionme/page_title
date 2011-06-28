@@ -352,7 +352,7 @@ function page_title_form_node_type_form_alter(&$form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Page Title Pattern'),
     '#default_value' => variable_get('page_title_type_'. $form['#node_type']->type, ''),
-    '#description' => t('Enter the <em>Page Title</em> pattern you want to use for this node type. For more information, please use the !link settings page', array('!link' => l('Page Title', 'admin/content/page_title'))),
+    '#description' => t('Enter the <em>Page Title</em> pattern you want to use for this node type. For more information, please use the !link settings page', array('!link' => l('Page Title', 'admin/settings/page-title'))),
     '#maxlength' => 255,
   );
 
