@@ -13,7 +13,7 @@ function node_page_title_alter(&$title) {
   $menu_item = menu_get_item();
 
   // Test if this is a node page.
-  if ( !strncmp($menu_item['path'],'node/%',6) &&
+  if ( !strncmp($menu_item['path'], 'node/%', 6) &&
        ($node = menu_get_object()) &&
        !empty($node->page_title) &&
        variable_get('page_title_type_'. $node->type .'_showfield', 0)) {
@@ -32,7 +32,7 @@ function node_page_title_pattern_alter(&$pattern, &$types) {
   $menu_item = menu_get_item();
 
   // Test if this is a node page.
-  if ( !strncmp($menu_item['path'],'node/%',6) &&
+  if ( !strncmp($menu_item['path'], 'node/%', 6) &&
        $node = menu_get_object() ) {
     $types['node'] = $node;
 
