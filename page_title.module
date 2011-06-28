@@ -644,12 +644,14 @@ function page_title_form_views_ui_config_item_form_alter(&$form, &$form_state) {
   // Don't bother altering non-argument forms
   if ($form_state['type'] != 'argument') return;
 
-  // Check the display handler is a page - if not, dont bother altering.
-  $type = get_class($form_state['view']->display_handler);
-  if ($type != 'page_title_plugin_display_page_with_page_title') return;
+  $view = &$form_state['view'];
+  $display_handler = &$view->display_handler;
 
-  // Now check the display is overriding the default - this is necessary as we cannot assign a page title to the default display.
-  if (!isset($form_state['view']->display_handler->options['arguments'])) return;
+  // Check the display handler is a page - if not, dont bother altering.
+  if ($display_handler->display->display_plugin != 'page_with_page_title') return;
+
+  // Now check the display has arguments. This ensures we are on an overidden Argument configuration.
+  if (!isset($display_handler->options['arguments']) || empty($display_handler->options['arguments'])) return;
 
   // Build a page title options fieldset wrapper
   $temp_form['page_title_pattern'] = array(
