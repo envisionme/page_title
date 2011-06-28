@@ -768,6 +768,7 @@ function page_title_get_settings() {
  * Internal function for sorting the page title settings array.
  */
 function _page_title_settings_sort($a, $b) {
+  // Sort by weight and, failing that, label alphabetical.
   return $a['weight'] < $b['weight'] ? -1 : ($a['weight'] > $b['weight'] ? 1 : ($a['label'] < $b['label'] ? -1 : 1));
 }
 

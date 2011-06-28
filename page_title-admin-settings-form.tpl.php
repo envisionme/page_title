@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Tempalte file for the admin settings form. Displays configuration in a neat table
+ * Template file for the admin settings form. Displays configuration in a neat table
  */
 
 $rows = array();
@@ -31,10 +31,10 @@ foreach (element_children($form['pattern']) as $key) {
 }
 
 $headers = array(
-  array('data' => t('Page Type'), 'class' => 'page-type'),
+  array('data' => t('Page Type'),   'class' => 'page-type'),
   array('data' => t('Token Scope'), 'class' => 'scope'),
-  array('data' => t('Pattern'), 'class' => 'pattern'),
-  array('data' => t('Show Field'), 'class' => 'showfie;d'),
+  array('data' => t('Pattern'),     'class' => 'pattern'),
+  array('data' => t('Show Field'),  'class' => 'showfield'),
 );
 
 
