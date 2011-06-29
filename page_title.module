@@ -265,7 +265,7 @@ function page_title_form_taxonomy_form_term_alter(&$form, &$form_state) {
       '#type' => 'textfield',
       '#title' => t('Page title'),
       '#description' => t('Provide a description of this term to appear in the &lt;title&gt; tag which search engines can use in search result listings (optional). It is generally accepted this field should be less than 70 characters.'),
-      '#default_value' => page_title_load_title($form['tid']['#value'], 'term'),
+      '#default_value' => isset($form['tid']['#value']) ? page_title_load_title($form['tid']['#value'], 'term') : '',
       '#size' => 60,
       '#maxlength' => 255,
       '#weight' => -20,
