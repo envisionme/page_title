@@ -39,14 +39,15 @@ INSTALLATION:
    database:
 
     CREATE TABLE `page_title` (
-      `nid` INT NOT NULL ,
-      `page_title` VARCHAR( 128 ) NOT NULL ,
-      PRIMARY KEY ( `nid` )
-    ) /*!40100 DEFAULT CHARACTER SET utf8 */;
+      `type` varchar(15) NOT NULL default 'node',
+      `id` int(10) unsigned NOT NULL default '0',
+      `page_title` varchar(255) NOT NULL default '',
+      PRIMARY KEY  (`type`,`id`)
+    );
 
 3. Optionally configure the two variations of page title by visiting:
 
-    Administer > Content management > Page titles
+    Administer > Site configuration > Page title
 
    From the configuration page you can define "patterns" for sections of your
    site as well as toggling the visibility of the Page Title field.
