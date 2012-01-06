@@ -863,6 +863,7 @@ function comment_page_title_api() { return page_title_page_title_api(); }
 function forum_page_title_api() { return page_title_page_title_api(); }
 function user_page_title_api() { return page_title_page_title_api(); }
 function views_page_title_api() { return page_title_page_title_api(); }
+function uc_catalog_page_title_api() { return page_title_page_title_api(); }
 
 
 /**
