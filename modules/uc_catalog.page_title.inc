@@ -59,8 +59,9 @@ function uc_catalog_page_title_settings() {
       'label' => 'Ubercart Catalog - %vocab_name',
       'label arguments' => array('%vocab_name' => $vocab->name),
       'scopes' => array('global', 'taxonomy'),
-      'show field' => TRUE,
-      'description' => 'This pattern will be used for all %vocab_name Ubercart catalog pages',
+      'show field' => FALSE,
+      'description' => 'This pattern will be used for all %vocab_name Ubercart catalog pages.<br />' .
+                       'The Show Field setting does not apply here. Use the matching Vocabulary row.',
       'description arguments' => array('%vocab_name' => $vocab->name),
     );
   }
