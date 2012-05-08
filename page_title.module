@@ -397,7 +397,8 @@ function page_title_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       break;
 
     case 'load':
-      return array('page_title' => page_title_load_title($node->nid, 'node'));
+      $enabled = (bool)variable_get('page_title_type_'. $node->type .'_showfield', FALSE);
+      return array('page_title' => ($enabled ? page_title_load_title($node->nid, 'node') : ''));
   }
 }
 
