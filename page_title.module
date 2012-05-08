@@ -768,7 +768,7 @@ function page_title_get_settings($flush = FALSE) {
 
   // Get the settings from hook_page_title_settings().
   $settings = module_invoke_all('page_title_settings');
-  
+ 
   // For each setting, apply a "default" mask (this makes it easier to use
   // later as we can assume presence)
   foreach ($settings as $k => $v) {
